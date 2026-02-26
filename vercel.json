@@ -5,5 +5,8 @@
             "source": "/api/(.*)",
             "destination": "/api/index.js"
         }
-    ]
+    ],
+    "env": {
+        "WEATHER_API": "532b2f312064894319122d2a6427a1fa48785546"
+    }
 }
