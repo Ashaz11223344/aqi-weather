@@ -4,8 +4,8 @@
     "description": "Backend proxy for AQI Pro",
     "type": "module",
     "scripts": {
-        "start": "node server.js",
-        "dev": "node --watch server.js"
+        "start": "node dev-server.js",
+        "dev": "node --watch dev-server.js"
     },
     "dependencies": {
         "cors": "^2.8.5",
