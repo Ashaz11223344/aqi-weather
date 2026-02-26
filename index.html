@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <link rel="icon" type="image/x-icon" href="icon.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AQI Dashboard | Real-time Air Quality Insights</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="theme-good">
+  <div id="app">
+    <header>
+      <div class="logo">
+        <i data-lucide="wind" class="icon-brand"></i>
+        <span>AQI PRO</span>
+      </div>
+      <div class="search-container">
+        <div class="search-box">
+          <i data-lucide="search" class="icon-search"></i>
+          <input type="text" id="cityInput" placeholder="Search city..." autocomplete="off" role="combobox"
+            aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="searchAutocomplete" />
+          <div id="searchAutocomplete" class="autocomplete-list" role="listbox"></div>
+        </div>
+        <button id="searchBtn" class="btn-primary" onclick="getAQI()">
+          <span class="btn-text">Search</span>
+          <i data-lucide="arrow-right"></i>
+        </button>
+        <button id="locationBtn" class="btn-icon" onclick="useGeolocation()" title="Use my location">
+          <i data-lucide="map-pin"></i>
+        </button>
+      </div>
+      <div class="header-actions">
+        <button id="themeToggle" class="btn-icon-alt" onclick="toggleTheme()">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="dashboard-grid">
+      <!-- Main AQI Hero Card -->
+      <section class="card hero-card" id="mainCard">
+        <div class="card-header">
+          <h2 id="cityName">
+            <span id="cityNameText">---</span>
+            <button id="favoriteBtn" class="btn-fav" onclick="toggleFavorite()" title="Add to favorites">
+              <i data-lucide="star"></i>
+            </button>
+            <button id="openShareBtn" class="btn-share-trigger" onclick="openShareModal()" title="Share AQI Card">
+              <i data-lucide="share-2"></i>
+            </button>
+          </h2>
+          <span class="last-updated" id="lastUpdated">Updated: --:--</span>
+        </div>
+        <div class="aqi-display">
+          <div class="aqi-value-wrapper">
+            <h1 id="aqiValue">0</h1>
+            <p>AQI</p>
+          </div>
+          <div class="aqi-status">
+            <h3 id="categoryText">Starting...</h3>
+            <p id="healthAdvice">Fetching latest data for you.</p>
+          </div>
+        </div>
+        <div class="hero-footer">
+          <div class="station-info">
+            <i data-lucide="navigation"></i>
+            <span id="stationName">Nearest Station: --</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pollutant Breakdown -->
+      <section class="card pollutant-card">
+        <h3><i data-lucide="layers"></i> Pollutant Breakdown</h3>
+        <div class="pollutant-grid">
+          <div class="pollutant-item" id="p_pm25">
+            <span class="label">PM2.5 <i data-lucide="info" class="pollutant-info-btn"
+                onclick="showPollutantInfo('pm25')"></i></span>
+            <span class="value">--</span>
+            <div class="progress-bar">
+              <div class="fill"></div>
+            </div>
+          </div>
+          <div class="pollutant-item" id="p_pm10">
+            <span class="label">PM10 <i data-lucide="info" class="pollutant-info-btn"
+                onclick="showPollutantInfo('pm10')"></i></span>
+            <span class="value">--</span>
+            <div class="progress-bar">
+              <div class="fill"></div>
+            </div>
+          </div>
+          <div class="pollutant-item" id="p_no2">
+            <span class="label">NO2 <i data-lucide="info" class="pollutant-info-btn"
+                onclick="showPollutantInfo('no2')"></i></span>
+            <span class="value">--</span>
+            <div class="progress-bar">
+              <div class="fill"></div>
+            </div>
+          </div>
+          <div class="pollutant-item" id="p_so2">
+            <span class="label">SO2 <i data-lucide="info" class="pollutant-info-btn"
+                onclick="showPollutantInfo('so2')"></i></span>
+            <span class="value">--</span>
+            <div class="progress-bar">
+              <div class="fill"></div>
+            </div>
+          </div>
+          <div class="pollutant-item" id="p_o3">
+            <span class="label">O3 <i data-lucide="info" class="pollutant-info-btn"
+                onclick="showPollutantInfo('o3')"></i></span>
+            <span class="value">--</span>
+            <div class="progress-bar">
+              <div class="fill"></div>
+            </div>
+          </div>
+          <div class="pollutant-item" id="p_co">
+            <span class="label">CO <i data-lucide="info" class="pollutant-info-btn"
+                onclick="showPollutantInfo('co')"></i></span>
+            <span class="value">--</span>
+            <div class="progress-bar">
+              <div class="fill"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 24h Trend Chart -->
+      <section class="card chart-card">
+        <h3><i data-lucide="trending-up"></i> 24-Hour Trend</h3>
+        <div class="chart-container">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </section>
+
+      <!-- Map View -->
+      <section class="card map-card">
+        <h3><i data-lucide="map"></i> Air Quality Nearby</h3>
+        <div id="map" class="map-container"></div>
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2026 AQI PRO</p>
+    </footer>
+  </div>
+
+  <div id="loader" class="loader-overlay hidden">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Pollutant Info Modal -->
+  <div id="infoModal" class="modal">
+    <div class="modal-content">
+      <i data-lucide="x" class="modal-close" onclick="closeModal()"></i>
+      <h2 id="modalTitle">Pollutant Info</h2>
+      <p id="modalDescription">Detailed information about this pollutant will appear here.</p>
+    </div>
+  </div>
+
+  <!-- Share Card Modal -->
+  <div id="shareModal" class="modal">
+    <div class="modal-content share-modal-content">
+      <i data-lucide="x" class="modal-close" onclick="closeShareModal()"></i>
+      <h2 id="shareModalTitle">Share AQI Card</h2>
+      <div class="card-preview-container">
+        <canvas id="shareCanvas" width="1080" height="1080" style="display: none;"></canvas>
+        <div id="sharePreview" class="share-preview-img">
+          <!-- Generated image will appear here -->
+          <div class="preview-placeholder">
+            <div class="spinner"></div>
+            <p>Generating your card...</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer share-actions">
+        <button id="downloadBtn" class="btn-primary" onclick="downloadCard()" disabled>
+          <i data-lucide="download"></i> Download Image
+        </button>
+        <button id="nativeShareBtn" class="btn-secondary" onclick="shareCard()" disabled>
+          <i data-lucide="share-2"></i> Share Now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="script.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+
+</html>
