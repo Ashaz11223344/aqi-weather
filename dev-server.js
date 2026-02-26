@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.WEATHER_API;
 
 app.use(cors());
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Proxy endpoint for city feed
 app.get('/api/feed/:city', async (req, res) => {
